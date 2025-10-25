@@ -14,16 +14,16 @@ TODAY = date(2025, 10, 25)
 # Our company, "Nexora," is famous for 3 products.
 # IDs are now realistic SKUs (Stock Keeping Units).
 MOCK_PRODUCTS_DB = {
-    "NEX-LP-15-PRO": {
-        "name": "Nexora Laptop 15 Pro", 
+    "ORI-LP-15-PRO": {
+        "name": "Orion Laptop 15 Pro", 
         "return_window_days": 30
     },
-    "NEX-PH-7-ULT": {
-        "name": "Nexora Phone 7 Ultra", 
+    "ORI-PH-7-ULT": {
+        "name": "Orion Phone 7 Ultra", 
         "return_window_days": 14
     },
-    "NEX-HP-ELITE-W": {
-        "name": "Nexora Elite Headphones (White)", 
+    "ORI-HP-ELITE-W": {
+        "name": "Orion Elite Headphones (White)", 
         "return_window_days": 30
     },
 }
@@ -52,33 +52,33 @@ MOCK_ORDERS_DB = [
     {
         "order_id": "ORD-901", 
         "user_id": "karthik_n",
-        "product_id": "NEX-LP-15-PRO", # Laptop Pro
+        "product_id": "ORI-LP-15-PRO", # Laptop Pro
         "purchase_date": "2025-10-01"
     },
     {
         "order_id": "ORD-902", 
         "user_id": "karthik_n",
-        "product_id": "NEX-PH-7-ULT", # Phone 7 Ultra
+        "product_id": "ORI-PH-7-ULT", # Phone 7 Ultra
         "purchase_date": "2025-10-15"
     },
     # Sara bought 2 items
     {
         "order_id": "ORD-903", 
         "user_id": "sara_j",
-        "product_id": "NEX-PH-7-ULT",
+        "product_id": "ORI-PH-7-ULT",
         "purchase_date": "2025-10-20"
     },
     {
         "order_id": "ORD-904", 
         "user_id": "sara_j",
-        "product_id": "NEX-HP-ELITE-W",
+        "product_id": "ORI-HP-ELITE-W",
         "purchase_date": "2025-08-15" 
     },
     # David bought 1 item
     {
         "order_id": "ORD-905", 
         "user_id": "david_l",
-        "product_id": "NEX-LP-15-PRO",
+        "product_id": "ORI-LP-15-PRO",
         "purchase_date": "2025-09-20"
     }
 ]

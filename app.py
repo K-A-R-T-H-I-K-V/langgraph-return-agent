@@ -6,7 +6,7 @@ from agent import create_agent
 from config import MOCK_USERS_DB
 import time
 
-st.set_page_config(page_title="Nexora Support", page_icon="assets/logo.png", layout="centered")
+st.set_page_config(page_title="Orion Labs Support", page_icon="assets/logo.png", layout="centered")
 
 # --- MLOps: Caching the Agent ---
 @st.cache_resource
@@ -70,48 +70,48 @@ else:
         st.rerun()
 
 # --- 3. Main Chat Interface ---
-st.title("Nexora Electronics SupportBot")
+st.title("Orion Labs SupportBot")
 st.write("Welcome to our 24/7 support. I'm here to help with your orders and returns.")
 st.divider()
 
 if st.session_state.user_id:
-    # --- Display all messages from history ---
+    
+    # 1. Display all messages from history
+    # This loop is the SINGLE source of truth for displaying messages.
     for message in st.session_state.messages:
         avatar_path = "assets/user_avatar.png" if message["role"] == "user" else "assets/bot_avatar.png"
         with st.chat_message(message["role"], avatar=avatar_path):
             st.markdown(message["content"])
 
-    # --- Get new chat input (this is the correct, non-buggy way) ---
+    # 2. Get new input
     if prompt := st.chat_input("How can I help you with your orders?"):
         
-        # 1. Add user message to state and display it
+        # 3. Add USER message to state (DO NOT display it here)
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user", avatar="assets/user_avatar.png"):
-            st.markdown(prompt)
         
-        # 2. Run the agent and get the AI response
-        with st.chat_message("assistant", avatar="assets/bot_avatar.png"):
-            with st.spinner("Agent is thinking..."):
-                
-                # Config for the checkpointer (to remember conversation)
-                config = {"configurable": {"thread_id": st.session_state.thread_id}}
-                
-                # We only send the *new* message
-                inputs = {
-                    "messages": [HumanMessage(content=prompt)],
-                    "user_id": st.session_state.user_id
-                }
-                
-                final_state = app.invoke(inputs, config=config)
-                
-                # Get the *last* message (the AI's response)
-                ai_response_message = final_state["messages"][-1]
-                response_text = get_text_from_ai_message(ai_response_message)
-                
-                # 3. Add AI response to state and display it
-                st.session_state.messages.append({"role": "assistant", "content": response_text})
-                st.markdown(response_text)
-                
+        # 4. Prepare inputs for the agent
+        inputs = {
+            "messages": [HumanMessage(content=prompt)],
+            "user_id": st.session_state.user_id
+        }
+        
+        # 5. Get AI response (DO NOT display it here)
+        with st.spinner("Agent is thinking..."):
+            config = {"configurable": {"thread_id": st.session_state.thread_id}}
+            final_state = app.invoke(inputs, config=config)
+            
+            ai_response_message = final_state["messages"][-1]
+            response_text = get_text_from_ai_message(ai_response_message)
+            
+        # 6. Add AI message to state (DO NOT display it here)
+        st.session_state.messages.append({"role": "assistant", "content": response_text})
+        
+        # 7. Force a rerun
+        # This tells Streamlit to restart the script immediately.
+        # The `for` loop at the top (Step 1) will now run
+        # and display the *full* chat history, including the new messages.
+        st.rerun()
+
 else:
     # --- Show this if not logged in ---
     st.info("Please log in using the sidebar to start a chat.")
