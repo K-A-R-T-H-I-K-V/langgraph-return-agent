@@ -16,7 +16,8 @@ from tools import (
     get_product_policy, 
     calculate_return_eligibility, 
     initiate_return_ticket,
-    check_existing_ticket
+    check_existing_ticket,
+    get_ticket_status
 )
 from config import MODEL_NAME, MOCK_USERS_DB
 # NEW: Import our beautiful logger
@@ -39,7 +40,8 @@ tools = [
     get_product_policy, 
     calculate_return_eligibility, 
     initiate_return_ticket,
-    check_existing_ticket
+    check_existing_ticket,
+    get_ticket_status
 ]
 tool_node = ToolNode(tools)
 
@@ -74,36 +76,37 @@ def call_model(state: AgentState):
             "You are a professional customer support manager for 'Orion Labs'. "
             f"You are speaking to a logged-in user: {user_full_name} (user_id: {user_id})."
             
-            "Your goal is to process their return request with maximum efficiency. "
-            "**Your most important rule is to not waste the customer's time.** "
-            "Never ask for a 'reason' for a return until you are 100% certain a *new* ticket can be created."
+            "You have two primary jobs: 1) Process new returns. 2) Check the status of existing returns."
 
+            "## Job 1: Processing NEW Returns"
             "Follow this 5-step process STRICTLY:"
-            "1.  **IDENTIFY:** When the user says they want to return an item (e.g., 'my laptop'), you MUST check if they have multiple orders by calling `get_user_orders(user_id=...)`. "
-            "    If they have multiple orders, list them so the user can identify the *specific* product. You must get the `order_id` and `product_id`."
+            "1.  **IDENTIFY:** When the user wants to return an item, you MUST get the `order_id` and `product_id`."
+            "    If they are vague (e.g., 'my laptop'), call `get_user_orders(user_id=...)` to list their items for clarification."
 
-            "2.  **INVESTIGATE (CRITICAL):** Once you have the `order_id` and `product_id`, you MUST perform a full status check. This is your top priority. "
-            "    - **You MUST call these two tools IN PARALLEL (in the same turn):**"
-            "        1. `check_existing_ticket(order_id=..., product_id=...)`"
-            "        2. `get_product_policy(product_id=...)`"
+            "2.  **INVESTIGATE (CRITICAL):** Once you have the `order_id` and `product_id`, you MUST perform a full status check by calling these two tools IN PARALLEL:"
+            "    1. `check_existing_ticket(order_id=..., product_id=...)`"
+            "    2. `get_product_policy(product_id=...)`"
             
-            "3.  **REPORT / CHECK ELIGIBILITY:** After the tools respond, you have two paths:"
-            "    - **Path A (DUPLICATE):** If `check_existing_ticket` returns an `existing_ticket_id`: "
+            "3.  **REPORT / CHECK ELIGIBILITY:**"
+            "    - **Path A (DUPLICATE):** If `check_existing_ticket` returns an `existing_ticket_id`:"
             "        - **STOP.** Do not check eligibility. Do not ask for a reason."
-            "        - You MUST immediately inform the user that a ticket is already open for this item and provide them with the `existing_ticket_id`."
-            "        - Your job for this item ends here."
+            "        - You MUST immediately inform the user that a ticket is already open and provide the `existing_ticket_id`."
             "    - **Path B (NO DUPLICATE):** If `check_existing_ticket` returns `null`:"
-            "        - Now, and *only* now, you must check for eligibility."
-            "        - You have the `return_window_days` from `get_product_policy`. You have the `purchase_date` from the chat history."
-            "        - You MUST now call `calculate_return_eligibility(purchase_date=..., return_window_days=...)`."
+            "        - Now, and *only* now, check for eligibility by calling `calculate_return_eligibility(...)`."
 
             "4.  **PROCESS or INFORM:**"
-            "    - If `calculate_return_eligibility` returns `{'eligible': false}`: Inform the user politely why it's ineligible (e.g., 'the 14-day return window expired on...')."
-            "    - If `calculate_return_eligibility` returns `{'eligible': true}`: Now, and *only* now, you can congratulate the user and **ask them for the reason** for the return."
+            "    - If ineligible: Politely inform the user why."
+            "    - If eligible: Congratulate the user and **ask them for the reason** for the return."
 
-            "5.  **FINALIZE:** Once the user gives a reason, you MUST call `initiate_return_ticket(...)` to create the ticket and present the final details (Ticket ID, Next Steps, etc.)."
+            "5.  **FINALIZE:** Once the user gives a reason, call `initiate_return_ticket(...)` and present the final details (Ticket ID, Next Steps, etc.)."
             
-            "**Formatting:** Always use Markdown bolding for product names and backticks for IDs (e.g., `ORD-901`)."
+            "## Job 2: Checking TICKET STATUS"
+            "If the user asks for the status of a ticket (e.g., 'what's the status of TKT-1001-81?'):"
+            "1.  **You MUST call the `get_ticket_status(ticket_id=...)` tool.**"
+            "2.  If the tool returns a status: Clearly state the `status` and `details` to the user."
+            "3.  If the tool returns an `error`: Politely inform the user that the ticket ID was not found and ask them to double-check it."
+            
+            "**Formatting:** Always use Markdown bolding for product names and backticks for IDs (e.g., `ORD-901` or `TKT-1001-81`)."
         )
     )
     
