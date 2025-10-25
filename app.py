@@ -70,47 +70,65 @@ else:
         st.rerun()
 
 # --- 3. Main Chat Interface ---
-st.title("Orion Labs SupportBot")
+
+# --- FIX 1: Title with Icon ---
+# We use columns to align the icon and title neatly.
+col1, col2 = st.columns([1, 6], vertical_alignment="center")
+with col1:
+    st.image("assets/bot_avatar.png", width=64) # Or 50, adjust as needed
+with col2:
+    st.title("Orion Labs SupportBot")
+
+# Only print the welcome message if the chat history is empty.
 st.write("Welcome to our 24/7 support. I'm here to help with your orders and returns.")
+
 st.divider()
 
 if st.session_state.user_id:
     
+    # --- THIS IS THE DEFINITIVE FIX ---
+
     # 1. Display all messages from history
-    # This loop is the SINGLE source of truth for displaying messages.
+    # This loop is now the SINGLE source of truth for all messages.
     for message in st.session_state.messages:
         avatar_path = "assets/user_avatar.png" if message["role"] == "user" else "assets/bot_avatar.png"
         with st.chat_message(message["role"], avatar=avatar_path):
             st.markdown(message["content"])
 
-    # 2. Get new input
+    # 2. Get new user input
     if prompt := st.chat_input("How can I help you with your orders?"):
-        
-        # 3. Add USER message to state (DO NOT display it here)
+        # Add user message to state and *immediately* rerun
         st.session_state.messages.append({"role": "user", "content": prompt})
-        
-        # 4. Prepare inputs for the agent
-        inputs = {
-            "messages": [HumanMessage(content=prompt)],
-            "user_id": st.session_state.user_id
-        }
-        
-        # 5. Get AI response (DO NOT display it here)
-        with st.spinner("Agent is thinking..."):
-            config = {"configurable": {"thread_id": st.session_state.thread_id}}
-            final_state = app.invoke(inputs, config=config)
-            
-            ai_response_message = final_state["messages"][-1]
-            response_text = get_text_from_ai_message(ai_response_message)
-            
-        # 6. Add AI message to state (DO NOT display it here)
-        st.session_state.messages.append({"role": "assistant", "content": response_text})
-        
-        # 7. Force a rerun
-        # This tells Streamlit to restart the script immediately.
-        # The `for` loop at the top (Step 1) will now run
-        # and display the *full* chat history, including the new messages.
         st.rerun()
+
+    # 3. Check if the bot needs to reply
+    #    (i.e., if the last message in the history is from the user)
+    if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+        
+        # 4. Show the "Thinking" spinner
+        with st.chat_message("assistant", avatar="assets/bot_avatar.png"):
+            with st.spinner("Agent is thinking..."):
+                
+                # 5. Prepare inputs for the agent
+                inputs = {
+                    "messages": [HumanMessage(content=st.session_state.messages[-1]["content"])],
+                    "user_id": st.session_state.user_id
+                }
+                config = {"configurable": {"thread_id": st.session_state.thread_id}}
+                
+                # 6. Run the agent
+                final_state = app.invoke(inputs, config=config)
+                
+                ai_response_message = final_state["messages"][-1]
+                response_text = get_text_from_ai_message(ai_response_message)
+                
+                # 7. Add AI message to state (DO NOT PRINT IT)
+                st.session_state.messages.append({"role": "assistant", "content": response_text})
+                
+                # 8. Rerun to display the new AI message
+                # This forces the script to restart, and the `for` loop (Step 1)
+                # will now print the bot's new message.
+                st.rerun()
 
 else:
     # --- Show this if not logged in ---

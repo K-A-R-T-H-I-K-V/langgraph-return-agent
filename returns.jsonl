@@ -1,1 +1,1 @@
-{"timestamp": "2025-10-25T20:56:26.849295", "ticket_id": "TKT-1001-54", "order_id": "ORD-901", "product_id": "NEX-LP-15-PRO", "reason": "it was defective", "assigned_agent": {"name": "Maria Garcia", "phone": "+1 (800) 555-5678"}}
+{"timestamp": "2025-10-25T21:23:32.729533", "ticket_id": "TKT-1001-81", "order_id": "ORD-901", "product_id": "ORI-LP-15-PRO", "reason": "defected", "assigned_agent": {"name": "David Kim", "phone": "+1 (800) 555-9012"}}

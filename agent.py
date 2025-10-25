@@ -15,7 +15,8 @@ from tools import (
     get_user_orders, 
     get_product_policy, 
     calculate_return_eligibility, 
-    initiate_return_ticket
+    initiate_return_ticket,
+    check_existing_ticket
 )
 from config import MODEL_NAME, MOCK_USERS_DB
 # NEW: Import our beautiful logger
@@ -37,7 +38,8 @@ tools = [
     get_user_orders, 
     get_product_policy, 
     calculate_return_eligibility, 
-    initiate_return_ticket
+    initiate_return_ticket,
+    check_existing_ticket
 ]
 tool_node = ToolNode(tools)
 
@@ -76,17 +78,17 @@ def call_model(state: AgentState):
             
             "Follow this 5-step process STRICTLY:"
             "1.  **IDENTIFY:** First, understand *which product* the user wants to return. If they are vague (e.g., 'my laptop'), you MUST call `get_user_orders(user_id=...)` to list their purchased items so they can clarify. You need the `order_id` and `product_id`."
-            "2.  **CHECK ELIGIBILITY:** Once you have the `order_id` and `product_id`, you MUST check its eligibility. This requires TWO tool calls: `get_product_policy(product_id=...)` AND `calculate_return_eligibility(purchase_date=..., return_window_days=...)`."
-            "3.  **INFORM (IF INELIGIBLE):** If `calculate_return_eligibility` returns `{'eligible': false}`, you MUST politely inform the user that the item is not eligible and state the reason (e.g., 'the 14-day return window expired on...'). Your job ends here for this item."
-            "4.  **PROCESS (IF ELIGIBLE):** If `calculate_return_eligibility` returns `{'eligible': true}`, you MUST do the following:"
-            "    a. Congratulate them on being eligible."
-            "    b. You MUST then *immediately* call the `initiate_return_ticket` tool. If you don't have the 'reason' yet, you MUST ask for it."
-            "    c. The tool will return a `ticket_id`, `refund_eta`, and `next_steps`."
-            "    d. You MUST present ALL this information clearly to the user, including the agent's name mentioned in the `next_steps`."
-            "5.  **HANDLE DUPLICATES (CRITICAL):** If the `initiate_return_ticket` tool returns an `{'error': '...', 'existing_ticket_id': '...'}`: "
-            "    a. You MUST NOT create a new ticket."
-            "    b. You MUST politely inform the user that a return ticket has *already* been created for this item."
-            "    c. You MUST provide them with the `existing_ticket_id`."
+            "2.  **CHECK ELIGIBILITY & STATUS:** Once you have the `order_id` and `product_id`, you MUST check its full status. This requires calling THREE tools: `get_product_policy(...)`, `calculate_return_eligibility(...)`, AND `check_existing_ticket(...)`."
+            "3.  **HANDLE DUPLICATES (CRITICAL):** If `check_existing_ticket(...)` returns an `existing_ticket_id`, your job is simple: "
+            "    a. You MUST NOT proceed, check eligibility, or ask for a reason."
+            "    b. You MUST immediately inform the user that a ticket is already open for this item and provide them with the `existing_ticket_id`."
+            "    c. Your job for this item ends here."
+            "4.  **INFORM (IF INELIGIBLE):** If (and only if) no ticket exists, you check `calculate_return_eligibility(...)`. If it returns `{'eligible': false}`, you MUST politely inform the user and state the reason (e.g., 'the 14-day return window expired on...'). Your job ends here."
+            "5.  **PROCESS (IF ELIGIBLE):** If (and only if) the item is eligible AND no ticket exists:"
+            "    a. Congratulate them."
+            "    b. You MUST then ask the user for the 'reason' for the return."
+            "    c. Once they provide a reason, you MUST call `initiate_return_ticket(...)`."
+            "    d. Present the final `ticket_id` and `next_steps` to the user."
             
             "Be polite, professional, and clear. **When listing items, use Markdown bolding for product names and backticks for the Order IDs.**"
             "Example: `1. **Orion Laptop 15 Pro** (Order ID: `ORD-901`)`"
