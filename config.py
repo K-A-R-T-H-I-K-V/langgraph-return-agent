@@ -11,8 +11,6 @@ TODAY = date(2025, 10, 25)
 # --- MLOps: Mock Database (Simulating Reality) ---
 
 # 1. Realistic Product Catalog
-# Our company, "Nexora," is famous for 3 products.
-# IDs are now realistic SKUs (Stock Keeping Units).
 MOCK_PRODUCTS_DB = {
     "ORI-LP-15-PRO": {
         "name": "Orion Laptop 15 Pro", 

@@ -71,11 +71,10 @@ else:
 
 # --- 3. Main Chat Interface ---
 
-# --- FIX 1: Title with Icon ---
 # We use columns to align the icon and title neatly.
 col1, col2 = st.columns([1, 6], vertical_alignment="center")
 with col1:
-    st.image("assets/bot_avatar.png", width=64) # Or 50, adjust as needed
+    st.image("assets/logo.png", width=120) # Or 50, adjust as needed
 with col2:
     st.title("Orion Labs SupportBot")
 
@@ -85,8 +84,6 @@ st.write("Welcome to our 24/7 support. I'm here to help with your orders and ret
 st.divider()
 
 if st.session_state.user_id:
-    
-    # --- THIS IS THE DEFINITIVE FIX ---
 
     # 1. Display all messages from history
     # This loop is now the SINGLE source of truth for all messages.

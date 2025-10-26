@@ -129,7 +129,7 @@ def call_model(state: AgentState):
         thought = "Decided to respond directly:\n"
         thought += f"  - [dim]{get_text_from_ai_message(response)}[/dim]"
     
-    log_agent_thought(thought) # <-- Use new logger
+    log_agent_thought(thought) 
     # --- END LOG ---
     
     return {"messages": [response]}
